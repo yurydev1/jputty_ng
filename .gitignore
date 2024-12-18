@@ -92,6 +92,8 @@ Makefile
 /doc/*.hhk
 /doc/licence.but
 /doc/copy.but
+/doc/putty-documentation.sln
+/doc/.vs
 /icons/*.pam
 /icons/*.png
 /icons/*.ico
