@@ -26,6 +26,7 @@ enum {
     CTRL_CHECKBOX,                     /* checkbox (contains own label) */
     CTRL_BUTTON,                       /* simple push button (no label) */
     CTRL_LISTBOX,                      /* label plus list box */
+    CTRL_LISTVIEW,                      /* label plus list box */
     CTRL_COLUMNS,                      /* divide window into columns */
     CTRL_FILESELECT,                   /* label plus filename selector */
     CTRL_FONTSELECT,                   /* label plus font selector */
@@ -545,6 +546,9 @@ dlgcontrol *ctrl_pushbutton(struct controlset *, const char *label,
 dlgcontrol *ctrl_listbox(struct controlset *, const char *label,
                          char shortcut, HelpCtx helpctx,
                          handler_fn handler, intorptr context);
+dlgcontrol* ctrl_listview(struct controlset*, const char* label,
+                          char shortcut, HelpCtx helpctx,
+                          handler_fn handler, intorptr context);
 dlgcontrol *ctrl_droplist(struct controlset *, const char *label,
                           char shortcut, int percentage, HelpCtx helpctx,
                           handler_fn handler, intorptr context);
@@ -595,6 +599,7 @@ void dlg_listbox_addwithid(dlgcontrol *ctrl, dlgparam *dp,
 int dlg_listbox_getid(dlgcontrol *ctrl, dlgparam *dp, int index);
 /* dlg_listbox_index returns <0 if no single element is selected. */
 int dlg_listbox_index(dlgcontrol *ctrl, dlgparam *dp);
+const TCHAR* dlg_listbox_get_selected_item_text(union control* ctrl, dlgparam* dp);
 bool dlg_listbox_issel(dlgcontrol *ctrl, dlgparam *dp, int index);
 void dlg_listbox_select(dlgcontrol *ctrl, dlgparam *dp, int index);
 void dlg_text_set(dlgcontrol *ctrl, dlgparam *dp, char const *text);

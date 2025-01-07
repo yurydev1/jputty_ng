@@ -429,6 +429,8 @@ int cmdline_process_param(CmdlineArg *arg, CmdlineArg *nextarg,
         RETURN(2);
         /* This parameter must be processed immediately rather than being
          * saved. */
+        jp_set_selection_session_name(value);
+        jp_load_instance_parameters(conf);
         do_defaults(value, conf);
         loaded_session = true;
         return 2;

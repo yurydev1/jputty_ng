@@ -1,5 +1,6 @@
 #include "putty.h"
 #include "storage.h"
+#include "jp_func.h"
 
 extern bool sesslist_demo_mode;
 extern Filename *dialog_box_demo_screenshot_filename;
@@ -151,7 +152,7 @@ void gui_term_process_cmdline(Conf *conf, char *cmdline)
                 cleanup_exit(0);
         }
     }
-
+    save_settings(jp_get_selection_info()->session_name, conf);
     prepare_session(conf);
 }
 

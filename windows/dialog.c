@@ -16,6 +16,7 @@
 #include "storage.h"
 #include "dialog.h"
 #include "licence.h"
+#include "jp_func.h"
 
 #include <commctrl.h>
 #include <commdlg.h>
@@ -101,6 +102,7 @@ static void pds_free(PortableDialogStuff *pds)
 static INT_PTR pds_default_dlgproc(PortableDialogStuff *pds, HWND hwnd,
                                    UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    //JP_DEBUG_PRINT_STR_COND("222.0", msg == WM_NOTIFY);
     switch (msg) {
       case WM_LBUTTONUP:
         /*
@@ -193,13 +195,21 @@ static void pds_initdialog_finish(PortableDialogStuff *pds)
      * which the caller was expected to set up to be the one
      * containing the dialog controls likely to be used first.
      */
-    struct winctrl *c;
+    struct winctrl* c;
+    union control* ctrl = NULL;
     for (int i = 0; (c = winctrl_findbyindex(&pds->ctrltrees[0], i)) != NULL;
-         i++) {
+        i++) {
         if (c->ctrl) {
-            dlg_set_focus(c->ctrl, pds->dp);
-            break;
+            //if (!ctrl)
+            //    ctrl = c->ctrl;
+            if (c->ctrl->label && strcmp(c->ctrl->label, "Filter saved sessions") == 0) {
+                ctrl = c->ctrl;
+                break;
+            }
         }
+    }
+    if (ctrl) {
+        dlg_set_focus(ctrl, pds->dp);
     }
 
     /*
@@ -484,7 +494,7 @@ static INT_PTR GenericMainDlgProc(HWND hwnd, UINT msg, WPARAM wParam,
       case WM_INITDIALOG:
         pds_initdialog_start(pds, hwnd);
 
-        pds_create_controls(pds, TREE_BASE, IDCX_STDBASE, 3, 3, 235, "");
+        pds_create_controls(pds, TREE_BASE, IDCX_STDBASE, 3, 3, 262, "");
 
         SendMessage(hwnd, WM_SETICON, (WPARAM) ICON_BIG,
                     (LPARAM) LoadIcon(hinst, MAKEINTRESOURCE(IDI_CFGICON)));
@@ -516,7 +526,7 @@ static INT_PTR GenericMainDlgProc(HWND hwnd, UINT msg, WPARAM wParam,
             r.left = 3;
             r.right = r.left + 95;
             r.top = 13;
-            r.bottom = r.top + 219;
+            r.bottom = r.top + 244;
             MapDialogRect(hwnd, &r);
             treeview = CreateWindowEx(WS_EX_CLIENTEDGE, WC_TREEVIEW, "",
                                       WS_CHILD | WS_VISIBLE |
@@ -601,26 +611,61 @@ static INT_PTR GenericMainDlgProc(HWND hwnd, UINT msg, WPARAM wParam,
             SetTimer(hwnd, DEMO_SCREENSHOT_TIMER_ID, TICKSPERSEC, NULL);
 
         pds_initdialog_finish(pds);
+        jp_store_tree_items(treeview);
+        jp_hide_tree_view_items_ex_session();
+
         return 0;
 
       case WM_TIMER:
-        if (dialog_box_demo_screenshot_filename &&
-            (UINT_PTR)wParam == DEMO_SCREENSHOT_TIMER_ID) {
-            KillTimer(hwnd, DEMO_SCREENSHOT_TIMER_ID);
-            char *err = save_screenshot(
-                hwnd, dialog_box_demo_screenshot_filename);
-            if (err) {
-                MessageBox(hwnd, err, "Demo screenshot failure",
-                           MB_OK | MB_ICONERROR);
-                sfree(err);
+        if ((UINT_PTR)wParam != SCROLL_DELAY_TIMER) {
+            if (dialog_box_demo_screenshot_filename &&
+                (UINT_PTR)wParam == DEMO_SCREENSHOT_TIMER_ID) {
+                KillTimer(hwnd, DEMO_SCREENSHOT_TIMER_ID);
+                char* err = save_screenshot(
+                    hwnd, dialog_box_demo_screenshot_filename);
+                if (err) {
+                    MessageBox(hwnd, err, "Demo screenshot failure",
+                        MB_OK | MB_ICONERROR);
+                    sfree(err);
+                }
+                ShinyEndDialog(hwnd, 0);
             }
-            ShinyEndDialog(hwnd, 0);
+            return 0;
         }
-        return 0;
-
+        return pds_default_dlgproc(pds, hwnd, msg, wParam, lParam);
       case WM_NOTIFY:
+        if (((LPNMHDR)lParam)->code == NM_DBLCLK) {
+                if (LOWORD(wParam) != IDCX_TREEVIEW) {
+                ReleaseCapture();
+                ShinyEndDialog(hwnd, 1);
+            }
+            break;
+        }
+        if (lParam == 0)
+            break;
+        if (((LPNMHDR)lParam)->code == LVN_BEGINLABELEDIT || ((LPNMHDR)lParam)->code == LVN_ENDLABELEDIT) {
+            HWND hList = ((LPNMHDR)lParam)->hwndFrom;
+            int list_item_index = ListView_GetNextItem(hList, -1, LVNI_FOCUSED);
+            char item_text[1024];
+            switch (((LPNMHDR)lParam)->code) {
+            case LVN_BEGINLABELEDIT:
+                ListView_GetItemText(hList, list_item_index, 0, item_text, sizeof(item_text));
+                if (strcmp(item_text, "Default Settings") == 0) {
+                    SetWindowLongPtr(hwnd, DWLP_MSGRESULT, TRUE);
+                    return TRUE;
+                }
+                break;
+            case LVN_ENDLABELEDIT:
+                if (((LV_DISPINFO*)(lParam))->item.pszText != NULL) { // not ESC
+                    ListView_SetItemText(hList, list_item_index, 0, ((LV_DISPINFO*)(lParam))->item.pszText);
+                }
+                break;
+            }
+        }
         if (LOWORD(wParam) == IDCX_TREEVIEW &&
             ((LPNMHDR) lParam)->code == TVN_SELCHANGED) {
+            if (jp_is_tree_hidden())
+                return 0;
             /*
              * Selection-change events on the treeview cause us to do
              * a flurry of control deletion and creation - but only
@@ -672,10 +717,12 @@ static INT_PTR GenericMainDlgProc(HWND hwnd, UINT msg, WPARAM wParam,
             InvalidateRect (hwnd, NULL, true);
 
             SetFocus(((LPNMHDR) lParam)->hwndFrom);     /* ensure focus stays */
+            return 0;
         }
-        return 0;
-
+        if (((LPNMHDR)lParam)->code != LVN_ITEMCHANGED && ((LPNMHDR)lParam)->code != NM_SETFOCUS && ((LPNMHDR)lParam)->code != NM_DBLCLK)
+            break;
       default:
+        //JP_DEBUG_PRINT_STR_COND("225.3", msg == WM_NOTIFY);
         return pds_default_dlgproc(pds, hwnd, msg, wParam, lParam);
     }
 }

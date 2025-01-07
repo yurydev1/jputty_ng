@@ -21,6 +21,8 @@
 #include "dialog.h"
 
 #include <commctrl.h>
+#include "jp_defs.h"
+#include "jp_func.h"
 
 #define GAPBETWEEN 3
 #define GAPWITHIN 1
@@ -34,6 +36,7 @@
 #define EDITHEIGHT 12
 #define LISTHEIGHT 11
 #define LISTINCREMENT 8
+#define LISTVIEWINCREMENT 10
 #define COMBOHEIGHT 12
 #define PUSHBTNHEIGHT 14
 #define PROGBARHEIGHT 14
@@ -793,6 +796,40 @@ void listbox(struct ctlpos *cp, const char *stext,
           LBS_NOTIFY | LBS_HASSTRINGS | LBS_USETABSTOPS |
           (multi ? LBS_MULTIPLESEL : 0),
           WS_EX_CLIENTEDGE, "", lid);
+}
+
+/*
+ * A list view with a static labelling it.
+ */
+void listview(struct ctlpos* cp, const char* stext,
+    int sid, int lid, int lines, bool multi)
+{
+    RECT r;
+
+    if (stext != NULL) {
+        r.left = GAPBETWEEN;
+        r.top = cp->ypos;
+        r.right = cp->width;
+        r.bottom = STATICHEIGHT;
+        cp->ypos += r.bottom + GAPWITHIN;
+        doctl(cp, r, "STATIC", WS_CHILD | WS_VISIBLE, 0, stext, sid);
+    }
+
+    r.left = GAPBETWEEN;
+    r.top = cp->ypos;
+    r.right = cp->width;
+    r.bottom = LISTHEIGHT + (lines - 1) * LISTVIEWINCREMENT + 3;
+    cp->ypos += r.bottom + GAPBETWEEN;
+    HWND lv = doctl(cp, r, WC_LISTVIEW,
+        WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL |
+        LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_EDITLABELS | LVS_SHOWSELALWAYS |
+        (multi ? LBS_MULTIPLESEL : 0),
+        WS_EX_CLIENTEDGE, "", lid);
+    ListView_SetExtendedListViewStyle(lv, LVS_EX_FULLROWSELECT);
+    LV_COLUMN lvCol;
+    lvCol.mask = LVCF_WIDTH;    // Type of mask
+    lvCol.cx = 295;                                   // width of column
+    SendMessage(lv, LVM_INSERTCOLUMN, 0, (LPARAM)&lvCol);
 }
 
 /*
@@ -1615,30 +1652,39 @@ void winctrl_layout(struct dlgparam *dp, struct winctrls *wc,
             sfree(escaped);
             break;
           case CTRL_LISTBOX:
+          case CTRL_LISTVIEW:
             num_ids = 2;
             escaped = shortcut_escape(ctrl->label,
-                                      ctrl->listbox.shortcut);
+                ctrl->listbox.shortcut);
             shortcuts[nshortcuts++] = ctrl->listbox.shortcut;
             if (ctrl->listbox.draglist) {
                 data = snew(struct prefslist);
                 num_ids = 4;
                 prefslist(data, &pos, ctrl->listbox.height, escaped,
-                          base_id, base_id+1, base_id+2, base_id+3);
+                    base_id, base_id+1, base_id+2, base_id+3);
                 shortcuts[nshortcuts++] = 'u';   /* Up */
                 shortcuts[nshortcuts++] = 'd';   /* Down */
             } else if (ctrl->listbox.height == 0) {
                 /* Drop-down list. */
                 if (ctrl->listbox.percentwidth == 100) {
                     staticddlbig(&pos, escaped,
-                                 base_id, base_id+1);
+                        base_id, base_id+1);
                 } else {
                     staticddl(&pos, escaped, base_id,
-                              base_id+1, ctrl->listbox.percentwidth);
+                        base_id+1, ctrl->listbox.percentwidth);
                 }
             } else {
                 /* Ordinary list. */
-                listbox(&pos, escaped, base_id, base_id+1,
+                switch (ctrl->type) {
+                case CTRL_LISTBOX:
+                    listbox(&pos, escaped, base_id, base_id + 1,
                         ctrl->listbox.height, ctrl->listbox.multisel);
+                    break;
+                case CTRL_LISTVIEW:
+                    listview(&pos, escaped, base_id, base_id + 1,
+                        ctrl->listbox.height, ctrl->listbox.multisel);
+                    break;
+                }
             }
             if (ctrl->listbox.ncols) {
                 /*
@@ -1659,7 +1705,7 @@ void winctrl_layout(struct dlgparam *dp, struct winctrls *wc,
                     tabarray[i] = width * percent / 10000;
                 }
                 SendDlgItemMessage(cp->hwnd, base_id+1, LB_SETTABSTOPS,
-                                   ctrl->listbox.ncols-1, (LPARAM)tabarray);
+                    ctrl->listbox.ncols-1, (LPARAM)tabarray);
                 sfree(tabarray);
             }
             sfree(escaped);
@@ -1808,9 +1854,27 @@ bool winctrl_handle_command(struct dlgparam *dp, UINT msg,
 {
     struct winctrl *c;
     dlgcontrol *ctrl;
+    static dlgcontrol *listview_ctrl = NULL;
     int i, id;
     bool ret;
     static UINT draglistmsg = WM_NULL;
+    static UINT timer_id = 0;
+    //JP_DEBUG_PRINT_VAR_INT("144.1.0", msg);
+    //JP_DEBUG_PRINT_STR_COND("144.1.1", msg == WM_TIMER);
+    if (msg == WM_TIMER && wParam == SCROLL_DELAY_TIMER && listview_ctrl) {
+        //JP_DEBUG_PRINT_TAG("144.22.0");
+        if (timer_id != 0) {
+            dlg_kill_timer(dp, timer_id);
+            timer_id = 0;
+        }
+        int currently_selected_session_listbox_id = dlg_listbox_index(listview_ctrl, dp);
+        int previously_selected_session_listbox_id = jp_get_selection_info()->listbox_id;
+        if (currently_selected_session_listbox_id == previously_selected_session_listbox_id)
+            return true;
+        listview_ctrl->handler(listview_ctrl, dp, dp->data, EVENT_SELCHANGE);
+
+        return true;
+    }
 
     /*
      * Filter out pointless window messages. Our interest is in
@@ -1819,7 +1883,8 @@ bool winctrl_handle_command(struct dlgparam *dp, UINT msg,
     if (draglistmsg == WM_NULL)
         draglistmsg = RegisterWindowMessage (DRAGLISTMSGSTRING);
 
-    if (msg != draglistmsg && msg != WM_COMMAND && msg != WM_DRAWITEM)
+    if (msg != draglistmsg && msg != WM_COMMAND && msg != WM_DRAWITEM && msg != WM_TIMER
+        && !(msg == WM_NOTIFY && (((LPNMHDR)lParam)->code == LVN_ITEMCHANGED || ((LPNMHDR)lParam)->code == NM_SETFOCUS || ((LPNMHDR)lParam)->code == NM_DBLCLK)))
         return false;
 
     /*
@@ -1950,6 +2015,7 @@ bool winctrl_handle_command(struct dlgparam *dp, UINT msg,
         }
         break;
       case CTRL_LISTBOX:
+      case CTRL_LISTVIEW:
         if (msg == WM_COMMAND && ctrl->listbox.height != 0 &&
             (HIWORD(wParam)==LBN_SETFOCUS || HIWORD(wParam)==LBN_KILLFOCUS))
             winctrl_set_focus(ctrl, dp, HIWORD(wParam) == LBN_SETFOCUS);
@@ -1962,7 +2028,7 @@ bool winctrl_handle_command(struct dlgparam *dp, UINT msg,
         if (ctrl->listbox.draglist) {
             int pret;
             pret = handle_prefslist(c->data, NULL, 0, (msg != WM_COMMAND),
-                                    dp->hwnd, wParam, lParam);
+                dp->hwnd, wParam, lParam);
             if (pret & 2)
                 ctrl->handler(ctrl, dp, dp->data, EVENT_VALCHANGE);
             ret = pret & 1;
@@ -1970,8 +2036,52 @@ bool winctrl_handle_command(struct dlgparam *dp, UINT msg,
             if (msg == WM_COMMAND && HIWORD(wParam) == LBN_DBLCLK) {
                 SetCapture(dp->hwnd);
                 ctrl->handler(ctrl, dp, dp->data, EVENT_ACTION);
-            } else if (msg == WM_COMMAND && HIWORD(wParam) == LBN_SELCHANGE) {
-                ctrl->handler(ctrl, dp, dp->data, EVENT_SELCHANGE);
+            }
+            if (msg == WM_TIMER && wParam == SCROLL_DELAY_TIMER) {
+                JP_DEBUG_PRINT_TAG("144.2");
+
+                if (timer_id != 0) {
+                    dlg_kill_timer(dp, timer_id);
+                    timer_id = 0;
+                }
+                int currently_selected_session_listbox_id = dlg_listbox_index(ctrl, dp);
+                int previously_selected_session_listbox_id = jp_get_selection_info()->listbox_id;
+                if (currently_selected_session_listbox_id != previously_selected_session_listbox_id)
+                    ctrl->handler(ctrl, dp, dp->data, EVENT_SELCHANGE);
+                return true;
+            }
+            if (msg == WM_NOTIFY) {
+                //JP_DEBUG_PRINT_TAG("125.3");
+                UINT code = ((LPNMHDR)lParam)->code;
+                if (code == LVN_ITEMCHANGED) {
+                    //JP_DEBUG_PRINT_TAG("125.4");
+                    UINT changed = ((NMLISTVIEW*)lParam)->uChanged;
+                    if (changed & LVIF_TEXT)
+                        ctrl->handler(ctrl, dp, dp->data, EVENT_VALCHANGE);
+                    else if (changed & LVIF_STATE) {
+                        NMLISTVIEW* lv = (NMLISTVIEW*)lParam;
+                        //JP_DEBUG_PRINT_TAG("125.5");
+                        if ((lv->uNewState & LVIS_SELECTED) != 0 && (lv->uOldState & LVIS_SELECTED) == 0) {
+                            listview_ctrl = ctrl;
+                            if (timer_id != 0)
+                                dlg_kill_timer(dp, timer_id);
+                            timer_id = dlg_set_timer(dp, SCROLL_DELAY_TIMER, 100);
+                        }
+                        else if ((lv->uNewState & LVIS_SELECTED) == 0 && (lv->uOldState & LVIS_SELECTED) != 0) {
+                            if (timer_id != 0)
+                                dlg_kill_timer(dp, timer_id);
+                            timer_id = dlg_set_timer(dp, SCROLL_DELAY_TIMER, 100);
+                        }
+                    }
+
+                }
+                else if (code == NM_SETFOCUS) {
+                    if (dlg_listbox_get_item_count(ctrl, dp) > 0 && dlg_listbox_index(ctrl, dp) == -1) {
+                        int item_to_select = jp_get_selection_info()->listbox_id != -1 ? jp_get_selection_info()->listbox_id : 0;
+                        dlg_listbox_select(ctrl, dp, item_to_select);
+                    }
+
+                }
             }
         }
         break;
@@ -2207,7 +2317,9 @@ void dlg_editbox_set(dlgcontrol *ctrl, dlgparam *dp, char const *text)
 {
     struct winctrl *c = dlg_findbyctrl(dp, ctrl);
     assert(c && c->ctrl->type == CTRL_EDITBOX);
-    SetDlgItemText(dp->hwnd, c->base_id+1, text);
+    char* editbox_text = dlg_editbox_get(ctrl, dp);
+    if (strcmp(dlg_editbox_get(ctrl, dp), text) != 0)
+        SetDlgItemText(dp->hwnd, c->base_id+1, text);
 }
 
 void dlg_editbox_set_utf8(dlgcontrol *ctrl, dlgparam *dp, char const *text)
@@ -2250,11 +2362,20 @@ void dlg_listbox_clear(dlgcontrol *ctrl, dlgparam *dp)
     struct winctrl *c = dlg_findbyctrl(dp, ctrl);
     int msg;
     assert(c &&
-           (c->ctrl->type == CTRL_LISTBOX ||
+        (c->ctrl->type == CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW ||
             (c->ctrl->type == CTRL_EDITBOX &&
-             c->ctrl->editbox.has_list)));
-    msg = (c->ctrl->type==CTRL_LISTBOX && c->ctrl->listbox.height!=0 ?
-           LB_RESETCONTENT : CB_RESETCONTENT);
+                c->ctrl->editbox.has_list)));
+    switch (c->ctrl->type) {
+    case CTRL_EDITBOX:
+    case CTRL_LISTBOX:
+        msg = c->ctrl->listbox.height != 0 ? LB_RESETCONTENT : CB_RESETCONTENT;
+        break;
+    case CTRL_LISTVIEW:
+        msg = LVM_DELETEALLITEMS;
+        break;
+    default:
+        assert(false);
+    }
     SendDlgItemMessage(dp->hwnd, c->base_id+1, msg, 0, 0);
 }
 
@@ -2263,11 +2384,11 @@ void dlg_listbox_del(dlgcontrol *ctrl, dlgparam *dp, int index)
     struct winctrl *c = dlg_findbyctrl(dp, ctrl);
     int msg;
     assert(c &&
-           (c->ctrl->type == CTRL_LISTBOX ||
+        (c->ctrl->type == CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW ||
             (c->ctrl->type == CTRL_EDITBOX &&
-             c->ctrl->editbox.has_list)));
-    msg = (c->ctrl->type==CTRL_LISTBOX && c->ctrl->listbox.height!=0 ?
-           LB_DELETESTRING : CB_DELETESTRING);
+                c->ctrl->editbox.has_list)));
+    msg = ((c->ctrl->type == CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW) && c->ctrl->listbox.height!=0 ?
+        LB_DELETESTRING : CB_DELETESTRING);
     SendDlgItemMessage(dp->hwnd, c->base_id+1, msg, index, 0);
 }
 
@@ -2276,12 +2397,25 @@ void dlg_listbox_add(dlgcontrol *ctrl, dlgparam *dp, char const *text)
     struct winctrl *c = dlg_findbyctrl(dp, ctrl);
     int msg;
     assert(c &&
-           (c->ctrl->type == CTRL_LISTBOX ||
+        (c->ctrl->type == CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW ||
             (c->ctrl->type == CTRL_EDITBOX &&
-             c->ctrl->editbox.has_list)));
-    msg = (c->ctrl->type==CTRL_LISTBOX && c->ctrl->listbox.height!=0 ?
-           LB_ADDSTRING : CB_ADDSTRING);
-    SendDlgItemMessage(dp->hwnd, c->base_id+1, msg, 0, (LPARAM)text);
+                c->ctrl->editbox.has_list)));
+    if (c->ctrl->type == CTRL_LISTVIEW) {
+        static item_index = 0;
+        LVITEMA lvItem;
+        lvItem.cchTextMax = 256;
+        lvItem.mask = LVIF_TEXT;
+        lvItem.iItem = item_index++;
+        lvItem.stateMask = 0;
+        lvItem.state = 0;
+        lvItem.iSubItem = 0;
+        lvItem.pszText = text;
+        SendDlgItemMessage(dp->hwnd, c->base_id + 1, LVM_INSERTITEM, 0, (LPARAM)&lvItem);
+    } else {
+        msg = (c->ctrl->type == CTRL_LISTBOX && c->ctrl->listbox.height != 0 ?
+            LB_ADDSTRING : CB_ADDSTRING);
+        SendDlgItemMessage(dp->hwnd, c->base_id + 1, msg, 0, (LPARAM)text);
+    }
 }
 
 /*
@@ -2297,13 +2431,13 @@ void dlg_listbox_addwithid(dlgcontrol *ctrl, dlgparam *dp,
     struct winctrl *c = dlg_findbyctrl(dp, ctrl);
     int msg, msg2, index;
     assert(c &&
-           (c->ctrl->type == CTRL_LISTBOX ||
+        (c->ctrl->type == CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW ||
             (c->ctrl->type == CTRL_EDITBOX &&
-             c->ctrl->editbox.has_list)));
-    msg = (c->ctrl->type==CTRL_LISTBOX && c->ctrl->listbox.height!=0 ?
-           LB_ADDSTRING : CB_ADDSTRING);
-    msg2 = (c->ctrl->type==CTRL_LISTBOX && c->ctrl->listbox.height!=0 ?
-            LB_SETITEMDATA : CB_SETITEMDATA);
+                c->ctrl->editbox.has_list)));
+    msg = ((c->ctrl->type==CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW) && c->ctrl->listbox.height!=0 ?
+        LB_ADDSTRING : CB_ADDSTRING);
+    msg2 = ((c->ctrl->type==CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW) && c->ctrl->listbox.height!=0 ?
+        LB_SETITEMDATA : CB_SETITEMDATA);
     index = SendDlgItemMessage(dp->hwnd, c->base_id+1, msg, 0, (LPARAM)text);
     SendDlgItemMessage(dp->hwnd, c->base_id+1, msg2, index, (LPARAM)id);
 }
@@ -2312,7 +2446,7 @@ int dlg_listbox_getid(dlgcontrol *ctrl, dlgparam *dp, int index)
 {
     struct winctrl *c = dlg_findbyctrl(dp, ctrl);
     int msg;
-    assert(c && c->ctrl->type == CTRL_LISTBOX);
+    assert(c && c->ctrl->type == CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW);
     msg = (c->ctrl->listbox.height != 0 ? LB_GETITEMDATA : CB_GETITEMDATA);
     return
         SendDlgItemMessage(dp->hwnd, c->base_id+1, msg, index, 0);
@@ -2322,28 +2456,77 @@ int dlg_listbox_getid(dlgcontrol *ctrl, dlgparam *dp, int index)
 int dlg_listbox_index(dlgcontrol *ctrl, dlgparam *dp)
 {
     struct winctrl *c = dlg_findbyctrl(dp, ctrl);
-    int msg, ret;
-    assert(c && c->ctrl->type == CTRL_LISTBOX);
+    int msg, lParam, wParam, ret;
+    assert(c && c->ctrl->type == CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW);
     if (c->ctrl->listbox.multisel) {
         assert(c->ctrl->listbox.height != 0); /* not combo box */
         ret = SendDlgItemMessage(dp->hwnd, c->base_id+1, LB_GETSELCOUNT, 0, 0);
         if (ret == LB_ERR || ret > 1)
             return -1;
     }
-    msg = (c->ctrl->listbox.height != 0 ? LB_GETCURSEL : CB_GETCURSEL);
-    ret = SendDlgItemMessage(dp->hwnd, c->base_id+1, msg, 0, 0);
+    if (c->ctrl->type == CTRL_LISTVIEW) {
+        msg = LVM_GETNEXTITEM;
+        lParam = LVNI_SELECTED;
+        wParam = -1;
+    }
+    else {
+        wParam = 0;
+        lParam = 0;
+        msg = (c->ctrl->listbox.height != 0 ? LB_GETCURSEL : CB_GETCURSEL);
+    }
+    ret = SendDlgItemMessage(dp->hwnd, c->base_id+1, msg, wParam, lParam);
     if (ret == LB_ERR)
         return -1;
     else
         return ret;
 }
 
+int dlg_listbox_get_top_index(dlgcontrol* ctrl, dlgparam* dp) {
+    return SendDlgItemMessage(dp->hwnd, dlg_findbyctrl(dp, ctrl)->base_id + 1, LVM_GETTOPINDEX, 0, 0);
+}
+
+int dlg_listbox_get_item_count(dlgcontrol* ctrl, dlgparam* dp) {
+    return SendDlgItemMessage(dp->hwnd, dlg_findbyctrl(dp, ctrl)->base_id + 1, LVM_GETITEMCOUNT, 0, 0);
+}
+
+const TCHAR* dlg_listbox_get_selected_item_text(dlgcontrol* ctrl, dlgparam* dp) {
+    int selected_id = dlg_listbox_index(ctrl, dp);
+    if (selected_id < 0)
+        return NULL;
+    struct winctrl* c = dlg_findbyctrl(dp, ctrl);
+    LV_ITEM lvi;
+    memset(&lvi, 0, sizeof(lvi));
+    lvi.mask = LVIF_TEXT;
+    lvi.iItem = selected_id;
+    lvi.iSubItem = 0;
+    static TCHAR szBuf[512];
+    lvi.pszText = szBuf;
+    lvi.cchTextMax = sizeof(szBuf);
+    int symbolsCount = SendDlgItemMessage(dp->hwnd, c->base_id + 1, LVM_GETITEMTEXT, selected_id, &lvi);
+    return szBuf;
+}
+
+const TCHAR* dlg_listbox_get_item_text(dlgcontrol* ctrl, dlgparam* dp, int index) {
+    struct winctrl* c = dlg_findbyctrl(dp, ctrl);
+    LV_ITEM lvi;
+    memset(&lvi, 0, sizeof(lvi));
+    lvi.mask = LVIF_TEXT;
+    lvi.iItem = index;
+    lvi.iSubItem = 0;
+    static TCHAR szBuf[512];
+    szBuf[0] = 0;
+    lvi.pszText = szBuf;
+    lvi.cchTextMax = sizeof(szBuf);
+    int symbolsCount = SendDlgItemMessage(dp->hwnd, c->base_id + 1, LVM_GETITEMTEXT, index, &lvi);
+    return szBuf;
+}
+
 bool dlg_listbox_issel(dlgcontrol *ctrl, dlgparam *dp, int index)
 {
     struct winctrl *c = dlg_findbyctrl(dp, ctrl);
-    assert(c && c->ctrl->type == CTRL_LISTBOX &&
-           c->ctrl->listbox.multisel &&
-           c->ctrl->listbox.height != 0);
+    assert(c && (c->ctrl->type == CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW) &&
+        c->ctrl->listbox.multisel &&
+        c->ctrl->listbox.height != 0);
     return
         SendDlgItemMessage(dp->hwnd, c->base_id+1, LB_GETSEL, index, 0);
 }
@@ -2352,10 +2535,56 @@ void dlg_listbox_select(dlgcontrol *ctrl, dlgparam *dp, int index)
 {
     struct winctrl *c = dlg_findbyctrl(dp, ctrl);
     int msg;
-    assert(c && c->ctrl->type == CTRL_LISTBOX &&
-           !c->ctrl->listbox.multisel);
-    msg = (c->ctrl->listbox.height != 0 ? LB_SETCURSEL : CB_SETCURSEL);
-    SendDlgItemMessage(dp->hwnd, c->base_id+1, msg, index, 0);
+    assert(c && (c->ctrl->type == CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW) &&
+        !c->ctrl->listbox.multisel);
+    if (c->ctrl->type == CTRL_LISTVIEW) {
+        LVITEM lvi;
+        lvi.state = LVIS_FOCUSED | LVIS_SELECTED;
+        lvi.stateMask = LVIS_FOCUSED | LVIS_SELECTED;
+        SendDlgItemMessage(dp->hwnd, c->base_id + 1, LVM_SETITEMSTATE, index, (LPARAM)&lvi);
+    }
+    else {
+        msg = (c->ctrl->listbox.height != 0 ? LB_SETCURSEL : CB_SETCURSEL);
+        SendDlgItemMessage(dp->hwnd, c->base_id + 1, msg, index, 0);
+    }
+}
+
+void dlg_listbox_edit(dlgcontrol* ctrl, dlgparam* dp, int index)
+{
+    struct winctrl* c = dlg_findbyctrl(dp, ctrl);
+    int msg;
+    assert(c && (c->ctrl->type == CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW) &&
+        !c->ctrl->listbox.multisel);
+    if (c->ctrl->type == CTRL_LISTVIEW) {
+        SetFocus(dp->hwnd);
+        SendDlgItemMessage(dp->hwnd, c->base_id + 1, LVM_EDITLABEL, (WPARAM)index, (LPARAM)0);
+    }
+    else {
+        msg = (c->ctrl->listbox.height != 0 ? LB_SETCURSEL : CB_SETCURSEL);
+        SendDlgItemMessage(dp->hwnd, c->base_id+1, msg, index, 0);
+    }
+}
+
+void dlg_listbox_ensure_visible(dlgcontrol* ctrl, dlgparam* dp, int index)
+{
+    struct winctrl* c = dlg_findbyctrl(dp, ctrl);
+    int msg;
+    assert(c && (c->ctrl->type == CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW) &&
+        !c->ctrl->listbox.multisel);
+    if (c->ctrl->type == CTRL_LISTVIEW) {
+        SendDlgItemMessage(dp->hwnd, c->base_id + 1, LVM_ENSUREVISIBLE, index, 0);
+    }
+    else {
+        //implement for listbox if and when required
+    }
+}
+
+UINT dlg_set_timer(dlgparam* dp, UINT event_id, UINT elapse) {
+    return SetTimer(dp->hwnd, event_id, elapse, NULL);
+}
+
+BOOL dlg_kill_timer(dlgparam* dp, UINT event_id) {
+    return KillTimer(dp->hwnd, event_id);
 }
 
 void dlg_text_set(dlgcontrol *ctrl, dlgparam *dp, char const *text)
@@ -2390,6 +2619,7 @@ void dlg_label_change(dlgcontrol *ctrl, dlgparam *dp, char const *text)
         id = c->base_id;
         break;
       case CTRL_LISTBOX:
+      case CTRL_LISTVIEW:
         escaped = shortcut_escape(text, ctrl->listbox.shortcut);
         id = c->base_id;
         break;
@@ -2474,7 +2704,7 @@ FontSpec *dlg_fontsel_get(dlgcontrol *ctrl, dlgparam *dp)
 void dlg_update_start(dlgcontrol *ctrl, dlgparam *dp)
 {
     struct winctrl *c = dlg_findbyctrl(dp, ctrl);
-    if (c && c->ctrl->type == CTRL_LISTBOX) {
+    if (c && (c->ctrl->type == CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW)) {
         SendDlgItemMessage(dp->hwnd, c->base_id+1, WM_SETREDRAW, false, 0);
     }
 }
@@ -2482,7 +2712,7 @@ void dlg_update_start(dlgcontrol *ctrl, dlgparam *dp)
 void dlg_update_done(dlgcontrol *ctrl, dlgparam *dp)
 {
     struct winctrl *c = dlg_findbyctrl(dp, ctrl);
-    if (c && c->ctrl->type == CTRL_LISTBOX) {
+    if (c && (c->ctrl->type == CTRL_LISTBOX || c->ctrl->type == CTRL_LISTVIEW)) {
         HWND hw = GetDlgItem(dp->hwnd, c->base_id+1);
         SendMessage(hw, WM_SETREDRAW, true, 0);
         InvalidateRect(hw, NULL, true);
@@ -2511,6 +2741,7 @@ void dlg_set_focus(dlgcontrol *ctrl, dlgparam *dp)
       case CTRL_CHECKBOX: id = c->base_id; break;
       case CTRL_BUTTON: id = c->base_id; break;
       case CTRL_LISTBOX: id = c->base_id + 1; break;
+      case CTRL_LISTVIEW: id = c->base_id + 1; break;
       case CTRL_FILESELECT: id = c->base_id + 1; break;
       case CTRL_FONTSELECT: id = c->base_id + 2; break;
       default: id = c->base_id; break;

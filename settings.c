@@ -11,6 +11,7 @@
 #include "ssh/gssc.h"
 #include "ssh/gss.h"
 #endif
+#include "jp_func.h"
 
 
 /* The cipher order given here is the default order. */
@@ -694,8 +695,10 @@ bool load_settings(const char *section, Conf *conf)
 
     sesskey = open_settings_r(section);
     bool exists = (sesskey != NULL);
+    jp_get_selection_info()->loading_settings = true;
     load_open_settings(sesskey, conf);
     close_settings_r(sesskey);
+    jp_get_selection_info()->loading_settings = false;
 
     if (exists && conf_launchable(conf))
         add_session_to_jumplist(section);

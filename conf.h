@@ -1276,6 +1276,26 @@ CONF_OPTION(shadowboldoffset,
     DEFAULT_INT(1),
     SAVE_KEYWORD("ShadowBoldOffset"),
 )
+CONF_OPTION(save_runtime_changes,
+    VALUE_TYPE(BOOL),
+    DEFAULT_BOOL(true),
+    SAVE_KEYWORD("SaveRuntimeChanges"),
+)
+CONF_OPTION(save_windowpos,
+    VALUE_TYPE(BOOL),
+    DEFAULT_BOOL(true),
+    SAVE_KEYWORD("SaveWindowPos"),
+)
+CONF_OPTION(windowpos_top,
+    VALUE_TYPE(INT),
+    DEFAULT_INT(CW_USEDEFAULT),
+    SAVE_KEYWORD("SaveWindowTop"),
+)
+CONF_OPTION(windowpos_left,
+    VALUE_TYPE(INT),
+    DEFAULT_INT(CW_USEDEFAULT),
+    SAVE_KEYWORD("SaveWindowLeft"),
+)
 CONF_OPTION(crhaslf,
     VALUE_TYPE(BOOL),
     DEFAULT_BOOL(false),

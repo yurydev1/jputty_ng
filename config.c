@@ -10,6 +10,7 @@
 #include "dialog.h"
 #include "storage.h"
 #include "tree234.h"
+#include "jp_func.h"
 
 #define PRINTER_DISABLED_STRING "None (printing disabled)"
 
@@ -199,12 +200,12 @@ static void config_host_handler(dlgcontrol *ctrl, dlgparam *dlg,
      * only it has to choose the control's label and text from two
      * different places depending on the protocol.
      */
-    if (event == EVENT_REFRESH) {
+    if (event == EVENT_REFRESH && conf) {
         if (conf_get_int(conf, CONF_protocol) == PROT_SERIAL) {
             /*
-             * This label text is carefully chosen to contain an n,
-             * since that's the shortcut for the host name control.
-             */
+                * This label text is carefully chosen to contain an n,
+                * since that's the shortcut for the host name control.
+                */
             dlg_label_change(ctrl, dlg, "Serial line");
             dlg_editbox_set(ctrl, dlg, conf_get_str(conf, CONF_serline));
         } else {
@@ -232,12 +233,12 @@ static void config_port_handler(dlgcontrol *ctrl, dlgparam *dlg,
      * only it has to choose the control's label and text from two
      * different places depending on the protocol.
      */
-    if (event == EVENT_REFRESH) {
+    if (event == EVENT_REFRESH && conf) {
         if (conf_get_int(conf, CONF_protocol) == PROT_SERIAL) {
             /*
-             * This label text is carefully chosen to contain a p,
-             * since that's the shortcut for the port control.
-             */
+                * This label text is carefully chosen to contain a p,
+                * since that's the shortcut for the port control.
+                */
             dlg_label_change(ctrl, dlg, "Speed");
             sprintf(buf, "%d", conf_get_int(conf, CONF_serspeed));
         } else {
@@ -280,7 +281,7 @@ static void config_protocols_handler(dlgcontrol *ctrl, dlgparam *dlg,
     int curproto = conf_get_int(conf, CONF_protocol);
     struct hostport *hp = (struct hostport *)ctrl->context.p;
 
-    if (event == EVENT_REFRESH) {
+    if (event == EVENT_REFRESH && conf) {
         /*
          * Refresh the states of the controls from Conf.
          *
@@ -778,18 +779,18 @@ static void sshbug_handler_manual_only(dlgcontrol *ctrl, dlgparam *dlg,
 }
 
 struct sessionsaver_data {
-    dlgcontrol *editbox, *listbox, *loadbutton, *savebutton, *delbutton;
+    dlgcontrol* editbox, * listbox, * copybutton, * delbutton;
     dlgcontrol *okbutton, *cancelbutton;
     struct sesslist sesslist;
     bool midsession;
-    char *savedsession;     /* the current contents of ssd->editbox */
+    char *session_filter;
 };
 
 static void sessionsaver_data_free(void *ssdv)
 {
     struct sessionsaver_data *ssd = (struct sessionsaver_data *)ssdv;
     get_sesslist(&ssd->sesslist, false);
-    sfree(ssd->savedsession);
+    sfree(ssd->session_filter);
     sfree(ssd);
 }
 
@@ -802,23 +803,96 @@ static bool load_selected_session(
     struct sessionsaver_data *ssd,
     dlgparam *dlg, Conf *conf, bool *maybe_launch)
 {
-    int i = dlg_listbox_index(ssd->listbox, dlg);
+    int listbox_id = dlg_listbox_index(ssd->listbox, dlg);
+    int session_id = jp_get_filtered_session(listbox_id);
     bool isdef;
-    if (i < 0) {
+    if (session_id == JP_SESSIONID_UNDEFINED) {
         dlg_beep(dlg);
         return false;
     }
-    isdef = !strcmp(ssd->sesslist.sessions[i], "Default Settings");
-    load_settings(ssd->sesslist.sessions[i], conf);
-    sfree(ssd->savedsession);
-    ssd->savedsession = dupstr(isdef ? "" : ssd->sesslist.sessions[i]);
+    isdef = !strcmp(ssd->sesslist.sessions[session_id], "Default Settings");
+    load_settings(ssd->sesslist.sessions[session_id], conf);
     if (maybe_launch)
         *maybe_launch = !isdef;
-    dlg_refresh(NULL, dlg);
-    /* Restore the selection, which might have been clobbered by
-     * changing the value of the edit box. */
-    dlg_listbox_select(ssd->listbox, dlg, i);
     return true;
+}
+
+void jp_filter_saved_sessions(dlgcontrol* ctrl, void* dlg) {
+    struct sessionsaver_data* ssd = (struct sessionsaver_data*)ctrl->context.p;
+    sfree(ssd->session_filter);
+    ssd->session_filter = dlg_editbox_get(ssd->editbox, dlg);
+    jp_set_session_filter(ssd->session_filter);
+    dlg_update_start(ssd->listbox, dlg);
+    dlg_listbox_clear(ssd->listbox, dlg);
+    char t_str[1024];
+    jp_reset_filtered_sessions();
+    for (int session_id = 0; session_id < ssd->sesslist.nsessions; session_id++) {
+        char* pch;
+        BOOL match = TRUE;
+        const char del_space[2] = " ";
+        strcpy(t_str, ssd->session_filter);
+        pch = strtok(t_str, del_space);
+        while (pch != NULL) {
+            if (strstr(ssd->sesslist.sessions[session_id], pch)) {
+                pch = strtok(NULL, del_space);
+                continue;
+            }
+            else {
+                match = FALSE;
+                break;
+            }
+        }
+        if (match) {
+            dlg_listbox_add(ssd->listbox, dlg, ssd->sesslist.sessions[session_id]);
+            jp_add_filtered_session(session_id);
+        }
+    }
+
+    jp_selection_info* selection_info = jp_get_selection_info();
+    if (selection_info->session_id != JP_SESSIONID_UNDEFINED) {
+        int listbox_id = jp_get_session_listbox_id(selection_info->session_id);
+        if (listbox_id != JP_LISTBOX_ID_UNDEFINED) {
+            if (dlg_listbox_index(ssd->listbox, dlg) != listbox_id)
+                dlg_listbox_select(ssd->listbox, dlg, listbox_id);
+        }
+        else {
+            selection_info->session_id = JP_SESSIONID_UNDEFINED;
+            selection_info->listbox_id = JP_LISTBOX_ID_UNDEFINED;
+            selection_info->listbox_top_id = 0;
+        }
+    }
+
+    dlg_update_done(ssd->listbox, dlg);
+}
+
+void jp_select_session_and_ensure_visible(dlgcontrol* ctrl, dlgparam* dlg, const int session_id, const int listbox_top_index) {
+    //JP_DEBUG_PRINT_VAR_INT2("2020.0", session_id, listbox_top_index);
+    struct sessionsaver_data* ssd = (struct sessionsaver_data*)ctrl->context.p;
+    const int listbox_height = ssd->listbox->listbox.height;
+    //JP_DEBUG_PRINT_VAR_INT("2020.1", listbox_height);
+    int listbox_bottom_id = listbox_top_index + listbox_height - 1;
+    //JP_DEBUG_PRINT_VAR_INT("2020.2", listbox_bottom_id);
+    int listbox_id_to_select = JP_LISTBOX_ID_UNDEFINED;
+    if (session_id != JP_SESSIONID_UNDEFINED)
+        listbox_id_to_select = jp_get_session_listbox_id(session_id);
+    //JP_DEBUG_PRINT_VAR_INT("2020.3", listbox_id_to_select);
+    if (listbox_id_to_select != JP_LISTBOX_ID_UNDEFINED) {
+        const int currently_selected_listbox_id = dlg_listbox_index(ssd->listbox, dlg);
+        //JP_DEBUG_PRINT_VAR_INT("2020.4", currently_selected_listbox_id);
+        if (listbox_id_to_select != currently_selected_listbox_id)
+            dlg_listbox_select(ssd->listbox, dlg, listbox_id_to_select);
+        if (listbox_id_to_select > listbox_bottom_id || listbox_id_to_select < listbox_top_index)
+            listbox_bottom_id = listbox_id_to_select + listbox_height / 2 - 1;
+        //JP_DEBUG_PRINT_VAR_INT("2020.5", listbox_bottom_id);
+
+    }
+    const int listview_item_count = dlg_listbox_get_item_count(ssd->listbox, dlg);
+    //JP_DEBUG_PRINT_VAR_INT("2020.6", listview_item_count);
+
+    if (listbox_bottom_id > listview_item_count - 1)
+        listbox_bottom_id = listview_item_count - 1;
+    //JP_DEBUG_PRINT_VAR_INT("2020.7", listbox_bottom_id);
+    dlg_listbox_ensure_visible(ssd->listbox, dlg, listbox_bottom_id);
 }
 
 static void sessionsaver_handler(dlgcontrol *ctrl, dlgparam *dlg,
@@ -830,85 +904,122 @@ static void sessionsaver_handler(dlgcontrol *ctrl, dlgparam *dlg,
 
     if (event == EVENT_REFRESH) {
         if (ctrl == ssd->editbox) {
-            dlg_editbox_set(ctrl, dlg, ssd->savedsession);
-        } else if (ctrl == ssd->listbox) {
-            int i;
-            dlg_update_start(ctrl, dlg);
-            dlg_listbox_clear(ctrl, dlg);
-            for (i = 0; i < ssd->sesslist.nsessions; i++)
-                dlg_listbox_add(ctrl, dlg, ssd->sesslist.sessions[i]);
-            dlg_update_done(ctrl, dlg);
+            dlg_editbox_set(ctrl, dlg, ssd->session_filter);
+            dlg_set_focus(ssd->session_filter, dlg);
+        }
+        else if (ctrl == ssd->listbox) {
+            jp_filter_saved_sessions(ctrl, dlg);
+            const jp_selection_info* selected_session = jp_get_selection_info();
+            jp_select_session_and_ensure_visible(ctrl, dlg, selected_session->session_id, selected_session->listbox_top_id);
+        }
+        else if (ctrl == ssd->session_filter) {
+            dlg_set_focus(ctrl, dlg);
+        }
+    }
+    else if (event == EVENT_SELCHANGE) {
+        bool mbl = false;
+        const int listbox_top_id = dlg_listbox_get_top_index(ssd->listbox, dlg);
+        const int current_listbox_id = dlg_listbox_index(ssd->listbox, dlg);
+        //JP_DEBUG_PRINT_VAR_INT("1010.1", listbox_top_id);
+        //JP_DEBUG_PRINT_VAR_INT("1010.2", current_listbox_id);
+        if (current_listbox_id != LB_ERR) {
+            const int session_id = jp_get_filtered_session(current_listbox_id);
+            //JP_DEBUG_PRINT_VAR_INT("1010.3", session_id);
+            load_selected_session(ssd, dlg, conf, &mbl);
+            jp_select_session_and_ensure_visible(ctrl, dlg, session_id, listbox_top_id);
+            jp_set_selection_info(session_id, ssd->sesslist.sessions[session_id], current_listbox_id, listbox_top_id);
+            if (jp_is_tree_hidden())
+                jp_restore_hidden_tree_items();
+            dlg_refresh(NULL, dlg);
+            //dlg_listbox_select(ssd->listbox, dlg, current_listbox_id);
+        }
+        else {
+            jp_set_selection_info(JP_SESSIONID_UNDEFINED, NULL, JP_LISTBOX_ID_UNDEFINED, listbox_top_id);
+            jp_hide_tree_view_items_ex_session();
+            Conf* conf = (Conf*)dlg->data;
+            conf_set_str(conf, CONF_host, "");
+            conf_set_int(conf, CONF_port, 0);
+            conf_set_int(conf, CONF_protocol, 0);
+
+            dlg_refresh(NULL, dlg);
         }
     } else if (event == EVENT_VALCHANGE) {
-        int top, bottom, halfway, i;
         if (ctrl == ssd->editbox) {
-            sfree(ssd->savedsession);
-            ssd->savedsession = dlg_editbox_get(ctrl, dlg);
-            top = ssd->sesslist.nsessions;
-            bottom = -1;
-            while (top-bottom > 1) {
-                halfway = (top+bottom)/2;
-                i = strcmp(ssd->savedsession, ssd->sesslist.sessions[halfway]);
-                if (i <= 0 ) {
-                    top = halfway;
-                } else {
-                    bottom = halfway;
-                }
+            jp_selection_info* selection_info = jp_get_selection_info();
+            char* current_session_filter = dlg_editbox_get(ssd->editbox, dlg);
+            if (strcmp(selection_info->session_filter, current_session_filter) != 0) {
+                jp_filter_saved_sessions(ctrl, dlg);
+                jp_set_session_filter(current_session_filter);
             }
-            if (top == ssd->sesslist.nsessions) {
-                top -= 1;
+        }
+        else if (ctrl == ssd->listbox) {
+            const int listbox_id = dlg_listbox_index(ssd->listbox, dlg);
+            const int session_id = jp_get_filtered_session(listbox_id);
+            const char* org_session_name = ssd->sesslist.sessions[session_id];
+            const char* new_session_name = dlg_listbox_get_selected_item_text(ssd->listbox, dlg);
+            const int listbox_height = ssd->listbox->listbox.height;
+            const int listbox_top_id = dlg_listbox_get_top_index(ssd->listbox, dlg);
+            int listbox_bottom_id = listbox_top_id + listbox_height - 2;
+            char* errmsg;
+
+            bool res = rename_settings(org_session_name, new_session_name, &errmsg);
+            get_sesslist(&ssd->sesslist, true);
+            jp_filter_saved_sessions(ctrl, dlg);
+            const int new_session_id = jp_get_session_id_via_name(&ssd->sesslist, new_session_name);
+            const int listbox_id_to_select = jp_get_session_listbox_id(new_session_id);
+            if (listbox_id_to_select != JP_LISTBOX_ID_UNDEFINED) {
+                dlg_listbox_select(ssd->listbox, dlg, listbox_id_to_select);
+                if (listbox_id_to_select > listbox_bottom_id || listbox_id_to_select < listbox_top_id)
+                    listbox_bottom_id = listbox_id_to_select + listbox_height / 2 - 1;
             }
-            dlg_listbox_select(ssd->listbox, dlg, top);
+            const int listview_item_count = dlg_listbox_get_item_count(ssd->listbox, dlg);
+            if (listbox_bottom_id > listview_item_count - 1)
+                listbox_bottom_id = listview_item_count - 1;
+            dlg_listbox_ensure_visible(ssd->listbox, dlg, listbox_bottom_id);
         }
     } else if (event == EVENT_ACTION) {
         bool mbl = false;
         if (!ssd->midsession &&
             (ctrl == ssd->listbox ||
-             (ssd->loadbutton && ctrl == ssd->loadbutton))) {
-            /*
-             * The user has double-clicked a session, or hit Load.
-             * We must load the selected session, and then
-             * terminate the configuration dialog _if_ there was a
-             * double-click on the list box _and_ that session
-             * contains a hostname.
-             */
-            if (load_selected_session(ssd, dlg, conf, &mbl) &&
-                (mbl && ctrl == ssd->listbox && conf_launchable(conf))) {
-                dlg_end(dlg, 1);       /* it's all over, and succeeded */
-            }
-        } else if (ctrl == ssd->savebutton) {
-            bool isdef = !strcmp(ssd->savedsession, "Default Settings");
-            if (!ssd->savedsession[0]) {
-                int i = dlg_listbox_index(ssd->listbox, dlg);
-                if (i < 0) {
-                    dlg_beep(dlg);
-                    return;
-                }
-                isdef = !strcmp(ssd->sesslist.sessions[i], "Default Settings");
-                sfree(ssd->savedsession);
-                ssd->savedsession = dupstr(isdef ? "" :
-                                           ssd->sesslist.sessions[i]);
-            }
-            {
-                char *errmsg = save_settings(ssd->savedsession, conf);
-                if (errmsg) {
-                    dlg_error_msg(dlg, errmsg);
-                    sfree(errmsg);
-                }
-            }
-            get_sesslist(&ssd->sesslist, false);
+             (ssd->copybutton && ctrl == ssd->copybutton))) {
+            const int listbox_id = dlg_listbox_index(ssd->listbox, dlg);
+            const int session_id = jp_get_filtered_session(listbox_id);
+            const char* src_session_name = ssd->sesslist.sessions[session_id];
+            jp_get_selection_info()->session_id = JP_SESSIONID_UNDEFINED;
+            jp_get_selection_info()->listbox_id = JP_LISTBOX_ID_UNDEFINED;
+            char* dst_session_name = jp_generate_session_name_on_copy(src_session_name, " #");
+            char* errmsg;
+            bool res = copy_settings(src_session_name, dst_session_name, &errmsg);
             get_sesslist(&ssd->sesslist, true);
-            dlg_refresh(ssd->editbox, dlg);
-            dlg_refresh(ssd->listbox, dlg);
+            jp_filter_saved_sessions(ctrl, dlg);
+            dlg_listbox_edit(ssd->listbox, dlg, 3);
+            const int listbox_height = ssd->listbox->listbox.height;
+            const int listbox_top_id = dlg_listbox_get_top_index(ssd->listbox, dlg);
+            int listbox_bottom_id = listbox_top_id + listbox_height - 2;
+
+            const int new_session_id = jp_get_session_id_via_name(&ssd->sesslist, dst_session_name);
+            const int listbox_id_to_select = jp_get_session_listbox_id(new_session_id);
+            if (listbox_id_to_select != JP_LISTBOX_ID_UNDEFINED) {
+                dlg_listbox_select(ssd->listbox, dlg, listbox_id_to_select);
+                if (listbox_id_to_select > listbox_bottom_id || listbox_id_to_select < listbox_top_id)
+                    listbox_bottom_id = listbox_id_to_select + listbox_height / 2 - 1;
+            }
+            const int listview_item_count = dlg_listbox_get_item_count(ssd->listbox, dlg);
+            if (listbox_bottom_id > listview_item_count - 1)
+                listbox_bottom_id = listview_item_count - 1;
+            dlg_listbox_ensure_visible(ssd->listbox, dlg, listbox_bottom_id);
         } else if (!ssd->midsession &&
                    ssd->delbutton && ctrl == ssd->delbutton) {
-            int i = dlg_listbox_index(ssd->listbox, dlg);
-            if (i <= 0) {
+            int listbox_id = dlg_listbox_index(ssd->listbox, dlg);
+            int session_id = jp_get_filtered_session(listbox_id);
+            if (session_id == JP_SESSIONID_UNDEFINED) {
                 dlg_beep(dlg);
             } else {
-                del_settings(ssd->sesslist.sessions[i]);
+                del_settings(ssd->sesslist.sessions[session_id]);
                 get_sesslist(&ssd->sesslist, false);
                 get_sesslist(&ssd->sesslist, true);
+                jp_selection_info* selection_info = jp_get_selection_info();
+                selection_info->session_id = jp_get_filtered_session(--(selection_info->listbox_id));
                 dlg_refresh(ssd->listbox, dlg);
             }
         } else if (ctrl == ssd->okbutton) {
@@ -1798,7 +1909,7 @@ void setup_config_box(struct controlbox *b, bool midsession,
         ctrl_alloc_with_free(b, sizeof(struct sessionsaver_data),
                              sessionsaver_data_free);
     memset(ssd, 0, sizeof(*ssd));
-    ssd->savedsession = dupstr("");
+    ssd->session_filter = dupstr("");
     ssd->midsession = midsession;
 
     /*
@@ -1904,7 +2015,7 @@ void setup_config_box(struct controlbox *b, bool midsession,
                     "Load, save or delete a stored session");
     ctrl_columns(s, 2, 75, 25);
     get_sesslist(&ssd->sesslist, true);
-    ssd->editbox = ctrl_editbox(s, "Saved Sessions", 'e', 100,
+    ssd->editbox = ctrl_editbox(s, "Filter saved sessions", 'e', 100,
                                 HELPCTX(session_saved),
                                 sessionsaver_handler, P(ssd), P(NULL));
     ssd->editbox->column = 0;
@@ -1912,28 +2023,23 @@ void setup_config_box(struct controlbox *b, bool midsession,
      * than alongside that edit box. */
     ctrl_columns(s, 1, 100);
     ctrl_columns(s, 2, 75, 25);
-    ssd->listbox = ctrl_listbox(s, NULL, NO_SHORTCUT,
+    ssd->listbox = ctrl_listview(s, NULL, NO_SHORTCUT,
                                 HELPCTX(session_saved),
                                 sessionsaver_handler, P(ssd));
     ssd->listbox->column = 0;
-    ssd->listbox->listbox.height = 7;
+    ssd->listbox->listbox.height = 9;
     if (!midsession) {
-        ssd->loadbutton = ctrl_pushbutton(s, "Load", 'l',
-                                          HELPCTX(session_saved),
-                                          sessionsaver_handler, P(ssd));
-        ssd->loadbutton->column = 1;
+        ssd->copybutton = ctrl_pushbutton(s, "Copy", 'y',
+            HELPCTX(session_saved),
+            sessionsaver_handler, P(ssd));
+        ssd->copybutton->column = 1;
     } else {
         /* We can't offer the Load button mid-session, as it would allow the
          * user to load and subsequently save settings they can't see. (And
          * also change otherwise immutable settings underfoot; that probably
          * shouldn't be a problem, but.) */
-        ssd->loadbutton = NULL;
+        ssd->copybutton = NULL;
     }
-    /* "Save" button is permitted mid-session. */
-    ssd->savebutton = ctrl_pushbutton(s, "Save", 'v',
-                                      HELPCTX(session_saved),
-                                      sessionsaver_handler, P(ssd));
-    ssd->savebutton->column = 1;
     if (!midsession) {
         ssd->delbutton = ctrl_pushbutton(s, "Delete", 'd',
                                          HELPCTX(session_saved),
@@ -2285,6 +2391,19 @@ void setup_config_box(struct controlbox *b, bool midsession,
                  conf_editbox_handler,
                  I(CONF_window_border), ED_INT);
 
+    str = dupprintf("jPuTTY specific settings", appname);
+    ctrl_settitle(b, "Window/jPuTTY", str);
+    sfree(str);
+
+    s = ctrl_getset(b, "Window/jPuTTY", "rt_changes",
+        "Runtime settings");
+    ctrl_checkbox(s, "Remember runtime setting changes", 'r',
+        HELPCTX(appearance_hidemouse),
+        conf_checkbox_handler, I(CONF_save_runtime_changes));
+    ctrl_checkbox(s, "Remember window position", 'p',
+        HELPCTX(appearance_hidemouse),
+        conf_checkbox_handler, I(CONF_save_windowpos));
+    
     /*
      * The Window/Behaviour panel.
      */

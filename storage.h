@@ -30,13 +30,17 @@
  *
  * Any returned error message must be freed after use.
  */
+bool rename_settings(const char *old_session_name, const char *new_session_name, char **errmsg);
 settings_w *open_settings_w(const char *sessionname, char **errmsg);
 void write_setting_s(settings_w *handle, const char *key, const char *value);
+void write_setting_s_si(settings_w *handle, int session_instance, const char *key, const char *value);
 void write_setting_i(settings_w *handle, const char *key, int value);
+void write_setting_i_si(settings_w *handle, int session_instance, const char *key, int value);
 void write_setting_filename(settings_w *handle,
                             const char *key, Filename *value);
 void write_setting_fontspec(settings_w *handle,
                             const char *key, FontSpec *font);
+void write_setting_fontspec_si(settings_w *handle, int session_instance, const char *name, FontSpec *font);
 void close_settings_w(settings_w *handle);
 
 /*
@@ -60,6 +64,7 @@ char *read_setting_s(settings_r *handle, const char *key);
 int read_setting_i(settings_r *handle, const char *key, int defvalue);
 Filename *read_setting_filename(settings_r *handle, const char *key);
 FontSpec *read_setting_fontspec(settings_r *handle, const char *key);
+FontSpec* read_setting_fontspec_si(settings_r* handle, int session_instance, const char* name);
 void close_settings_r(settings_r *handle);
 
 /*

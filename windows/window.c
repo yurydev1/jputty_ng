@@ -21,6 +21,7 @@
 #include "security-api.h"
 #include "win-gui-seat.h"
 #include "tree234.h"
+#include "jp_func.h"
 
 #ifdef NO_MULTIMON
 #include <multimon.h>
@@ -100,10 +101,10 @@ static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 static int TranslateKey(WinGuiSeat *wgs, UINT message, WPARAM wParam,
                         LPARAM lParam, unsigned char *output);
 static void init_palette(WinGuiSeat *wgs);
-static void init_fonts(WinGuiSeat *wgs, int, int);
+void init_fonts(WinGuiSeat *wgs, int, int);
 static void init_dpi_info(WinGuiSeat *wgs);
 static void another_font(WinGuiSeat *wgs, int);
-static void deinit_fonts(WinGuiSeat *wgs);
+void deinit_fonts(WinGuiSeat *wgs);
 static void set_input_locale(WinGuiSeat *wgs, HKL);
 static void update_savedsess_menu(WinGuiSeat *wgs);
 static void init_winfuncs(void);
@@ -116,7 +117,7 @@ static void process_clipdata(WinGuiSeat *wgs, HGLOBAL clipdata, bool unicode);
 static void setup_clipboards(Terminal *, Conf *);
 
 /* Window layout information */
-static void reset_window(WinGuiSeat *wgs, int reinit);
+void reset_window(WinGuiSeat *wgs, int reinit);
 
 static void flash_window(WinGuiSeat *wgs, int mode);
 static void sys_cursor_update(WinGuiSeat *wgs);
@@ -445,7 +446,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmdline, int show)
 {
     MSG msg;
     HRESULT hr;
-    int guess_width, guess_height;
+    int guess_width, guess_height, use_left, use_top;
 
     dll_hijacking_protection();
 
@@ -573,9 +574,18 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmdline, int show)
         sw_PeekMessage = PeekMessageW;
         sw_DispatchMessage = DispatchMessageW;
         sw_DefWindowProc = DefWindowProcW;
+        jp_load_instance_parameters(wgs->conf);
+        if (conf_get_bool(wgs->conf, CONF_save_windowpos)) {
+            use_left = conf_get_int(wgs->conf, CONF_windowpos_left);
+            use_top = conf_get_int(wgs->conf, CONF_windowpos_top);
+        }
+        else {
+            use_left = CW_USEDEFAULT;
+            use_top = CW_USEDEFAULT;
+        }
         wgs->term_hwnd = CreateWindowExW(
             exwinmode, terminal_window_class_w(), uappname,
-            winmode, CW_USEDEFAULT, CW_USEDEFAULT,
+            winmode, use_left, use_top,
             guess_width, guess_height, NULL, NULL, inst, NULL);
 #endif
 
@@ -1428,7 +1438,7 @@ static void init_dpi_info(WinGuiSeat *wgs)
  *
  * - find a trust sigil icon that will look OK with the chosen font.
  */
-static void init_fonts(WinGuiSeat *wgs, int pick_width, int pick_height)
+void init_fonts(WinGuiSeat *wgs, int pick_width, int pick_height)
 {
     TEXTMETRIC tm;
     OUTLINETEXTMETRIC otm;
@@ -1681,7 +1691,7 @@ static void another_font(WinGuiSeat *wgs, int fontno)
     wgs->fontflag[fontno] = true;
 }
 
-static void deinit_fonts(WinGuiSeat *wgs)
+void deinit_fonts(WinGuiSeat *wgs)
 {
     int i;
     for (i = 0; i < FONT_MAXNO; i++) {
@@ -1783,7 +1793,7 @@ static void recompute_window_offset(WinGuiSeat *wgs)
     }
 }
 
-static void reset_window(WinGuiSeat *wgs, int reinit)
+void reset_window(WinGuiSeat *wgs, int reinit)
 {
     /*
      * This function decides how to resize or redraw when the
@@ -2240,10 +2250,31 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
     WinGuiSeat *wgs = (WinGuiSeat *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (message) {
+      case LVN_BEGINLABELEDIT:
+          return 0;
       case WM_CREATE:
         break;
       case WM_CLOSE: {
-        char *title, *msg, *additional = NULL;
+          {
+              char* errmsg = NULL;
+              jp_selection_info* selection_info = jp_get_selection_info();
+              void* sesskey = open_settings_w(selection_info->session_name, &errmsg);
+              if (sesskey != NULL) {
+                  RECT wr;
+                  if (conf_get_bool(wgs->conf, CONF_save_runtime_changes))
+                      save_open_settings(sesskey, wgs->conf);
+                  GetWindowRect(hwnd, &wr);
+                  write_setting_i_si(sesskey, selection_info->instance_id, "SaveWindowTop", wr.top);
+                  write_setting_i_si(sesskey, selection_info->instance_id, "SaveWindowLeft", wr.left);
+                  write_setting_i_si(sesskey, selection_info->instance_id, "TermWidth", conf_get_int(wgs->conf, CONF_width));
+                  write_setting_i_si(sesskey, selection_info->instance_id, "TermHeight", conf_get_int(wgs->conf, CONF_height));
+                  write_setting_fontspec_si(sesskey, selection_info->instance_id, "Font", conf_get_fontspec(wgs->conf, CONF_font));
+              }
+              jp_release_sessionex_instance();
+              close_settings_w(sesskey);
+              sesskey = NULL;
+          }
+          char *title, *msg, *additional = NULL;
         show_mouseptr(wgs, true);
         title = dupprintf("%s Exit Confirmation", appname);
         if (wgs->backend && wgs->backend->vt->close_warn_text) {
@@ -3281,6 +3312,17 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
       case WM_SYSKEYDOWN:
       case WM_KEYUP:
       case WM_SYSKEYUP:
+          //jputty: handling Ctrl-Shift-N for opening another session
+          if ((GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_SHIFT) & 0x8000) && (GetKeyState(0x4E) & 0x8000)) {
+              char szFileName[MAX_PATH];
+              GetModuleFileName(NULL, szFileName, MAX_PATH);
+
+              char load_arg[1000];
+              sprintf(load_arg, "-load \"%s\"", jp_get_selection_info()->session_name);
+
+              ShellExecute(NULL, "open", szFileName, load_arg, NULL, SW_SHOWNORMAL);
+              return 0;
+          }
         /*
          * Add the scan code and keypress timing to the random
          * number noise.
@@ -3465,9 +3507,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 
                 /* reduce amount for next time */
                 if (wgs->wheel_accumulator > 0) {
+                    if (GetKeyState(VK_CONTROL) & 0x8000) {
+                        jp_change_font_size(wgs, hwnd, +1);
+                    }
                     b = message == WM_MOUSEHWHEEL ? MBT_WHEEL_RIGHT : MBT_WHEEL_UP;
                     wgs->wheel_accumulator -= WHEEL_DELTA;
                 } else if (wgs->wheel_accumulator < 0) {
+                    if (GetKeyState(VK_CONTROL) & 0x8000) {
+                        jp_change_font_size(wgs, hwnd, -1);
+                    }
                     b =  message == WM_MOUSEHWHEEL ? MBT_WHEEL_LEFT : MBT_WHEEL_DOWN;
                     wgs->wheel_accumulator += WHEEL_DELTA;
                 } else

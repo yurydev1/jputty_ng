@@ -142,3 +142,7 @@ Makefile
 /windows/*.msi
 /windows/*.wixobj
 /windows/*.wixpdb
+_builds
+.vs
+*.vcxproj.user
+!putty.vcxproj

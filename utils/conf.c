@@ -441,6 +441,7 @@ void conf_set_bool(Conf *conf, int primary, bool value)
     entry->key.primary = primary;
     entry->value.u.boolval = value;
     conf_insert(conf, entry);
+    jp_save_config_if_not_loading(conf);
 }
 
 void conf_set_int(Conf *conf, int primary, int value)
@@ -452,6 +453,7 @@ void conf_set_int(Conf *conf, int primary, int value)
     entry->key.primary = primary;
     entry->value.u.intval = value;
     conf_insert(conf, entry);
+    jp_save_config_if_not_loading(conf);
 }
 
 void conf_set_int_int(Conf *conf, int primary,
@@ -465,6 +467,7 @@ void conf_set_int_int(Conf *conf, int primary,
     entry->key.secondary.i = secondary;
     entry->value.u.intval = value;
     conf_insert(conf, entry);
+    jp_save_config_if_not_loading(conf);
 }
 
 bool conf_try_set_str(Conf *conf, int primary, const char *value)
@@ -487,6 +490,7 @@ void conf_set_str(Conf *conf, int primary, const char *value)
 {
     bool success = conf_try_set_str(conf, primary, value);
     assert(success && "conf_set_str on CONF_TYPE_UTF8");
+    jp_save_config_if_not_loading(conf);
 }
 
 bool conf_try_set_utf8(Conf *conf, int primary, const char *value)
@@ -509,6 +513,7 @@ void conf_set_utf8(Conf *conf, int primary, const char *value)
 {
     bool success = conf_try_set_utf8(conf, primary, value);
     assert(success && "conf_set_utf8 on CONF_TYPE_STR");
+    jp_save_config_if_not_loading(conf);
 }
 
 void conf_set_str_str(Conf *conf, int primary, const char *secondary,
@@ -523,6 +528,7 @@ void conf_set_str_str(Conf *conf, int primary, const char *secondary,
     entry->value.u.stringval.str = dupstr(value);
     entry->value.u.stringval.utf8 = false;
     conf_insert(conf, entry);
+    jp_save_config_if_not_loading(conf);
 }
 
 void conf_del_str_str(Conf *conf, int primary, const char *secondary)
@@ -550,6 +556,7 @@ void conf_set_filename(Conf *conf, int primary, const Filename *value)
     entry->key.primary = primary;
     entry->value.u.fileval = filename_copy(value);
     conf_insert(conf, entry);
+    jp_save_config_if_not_loading(conf);
 }
 
 void conf_set_fontspec(Conf *conf, int primary, const FontSpec *value)
@@ -561,6 +568,7 @@ void conf_set_fontspec(Conf *conf, int primary, const FontSpec *value)
     entry->key.primary = primary;
     entry->value.u.fontval = fontspec_copy(value);
     conf_insert(conf, entry);
+    jp_save_config_if_not_loading(conf);
 }
 
 void conf_serialise(BinarySink *bs, Conf *conf)

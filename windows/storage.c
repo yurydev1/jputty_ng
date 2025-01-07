@@ -32,6 +32,108 @@ struct settings_w {
     HKEY sesskey;
 };
 
+bool rename_settings(const char* org_session_name, const char* new_session_name, char** errmsg) {
+    *errmsg = NULL;
+
+    if (!org_session_name || !*org_session_name) {
+        *errmsg = dupprintf("no old session name has been provided");
+        return false;
+    }
+    if (!new_session_name || !*new_session_name) {
+        *errmsg = dupprintf("no new session name has been provided");
+        return false;
+    }
+
+    strbuf* sb_session = strbuf_new();
+    escape_registry_key(org_session_name, sb_session);
+    char* session_key = (char*)malloc(strlen(puttystr) + strlen(sb_session->s) + 2);
+    strcpy(session_key, puttystr);
+    strcat(session_key, L"\\");
+    strcat(session_key, sb_session->s);
+    strbuf_free(sb_session);
+    size_t session_key_len = strlen(session_key) + 1;
+    wchar_t* org_session_key_w = (wchar_t*)malloc(session_key_len * sizeof(wchar_t));
+    mbstowcs(org_session_key_w, session_key, session_key_len);
+    free(session_key);
+
+    sb_session = strbuf_new();
+    escape_registry_key(new_session_name, sb_session);
+    session_key = sb_session->s;
+    session_key_len = strlen(session_key) + 1;
+    wchar_t* new_session_key_w = (wchar_t*)malloc(session_key_len * sizeof(wchar_t));
+    mbstowcs(new_session_key_w, session_key, session_key_len);
+    strbuf_free(sb_session);
+
+    int ret = RegRenameKey(HKEY_CURRENT_USER, org_session_key_w, new_session_key_w);
+    free(org_session_key_w);
+    free(new_session_key_w);
+    if (ret != ERROR_SUCCESS) {
+        *errmsg = dupprintf("Unable to rename registry key\n"
+            "HKEY_CURRENT_USER\\%s", session_key);
+        return false;
+    }
+    return true;
+}
+
+bool copy_settings(const char* src_session_name, const char* dst_session_name, char** errmsg) {
+    *errmsg = NULL;
+
+    if (!src_session_name || !*src_session_name) {
+        *errmsg = dupprintf("no source session name has been provided");
+        return false;
+    }
+    if (!dst_session_name || !*dst_session_name) {
+        *errmsg = dupprintf("no destination session name has been provided");
+        return false;
+    }
+
+    strbuf* sb_session = strbuf_new();
+    escape_registry_key(src_session_name, sb_session);
+    char* session_key = (char*)malloc(strlen(puttystr) + strlen(sb_session->s) + 2);
+    strcpy(session_key, puttystr);
+    strcat(session_key, L"\\");
+    strcat(session_key, sb_session->s);
+    strbuf_free(sb_session);
+    LONG lResult;
+    HKEY hSrcKey, hDstKey;
+    lResult = RegOpenKeyEx(HKEY_CURRENT_USER, session_key, 0, KEY_ALL_ACCESS, &hSrcKey);
+    if (lResult != ERROR_SUCCESS)
+    {
+        *errmsg = dupprintf("Unable to open registry key\n"
+            "HKEY_CURRENT_USER\\%s", session_key);
+        return false;
+    }
+    free(session_key);
+
+
+    sb_session = strbuf_new();
+    escape_registry_key(dst_session_name, sb_session);
+    session_key = (char*)malloc(strlen(puttystr) + strlen(sb_session->s) + 2);
+    strcpy(session_key, puttystr);
+    strcat(session_key, L"\\");
+    strcat(session_key, sb_session->s);
+    strbuf_free(sb_session);
+
+    lResult = RegCreateKeyEx(HKEY_CURRENT_USER, session_key, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hDstKey, NULL);
+    free(session_key);
+    if (lResult != ERROR_SUCCESS)
+    {
+        *errmsg = dupprintf("Unable to create registry key\n"
+            "HKEY_CURRENT_USER\\%s", session_key);
+        return false;
+    }
+    lResult = RegCopyTree(hSrcKey, NULL, hDstKey);
+    RegCloseKey(hSrcKey);
+    RegCloseKey(hDstKey);
+    if (lResult != ERROR_SUCCESS)
+    {
+        *errmsg = dupprintf("Unable to copy registry key\n"
+            "HKEY_CURRENT_USER\\%s to HKEY_CURRENT_USER\\%s", src_session_name, dst_session_name);
+        return false;
+    }
+    return true;
+}
+
 settings_w *open_settings_w(const char *sessionname, char **errmsg)
 {
     *errmsg = NULL;
@@ -62,10 +164,47 @@ void write_setting_s(settings_w *handle, const char *key, const char *value)
         put_reg_sz(handle->sesskey, key, value);
 }
 
+void write_setting_s_si(settings_w* handle, int session_instance, const char* key, const char* value)
+{
+    if (handle) {
+        char session_instance_str[5];
+        itoa(session_instance, session_instance_str, 10);
+        HKEY hSubKey;
+        if (RegOpenKey(handle->sesskey, session_instance_str, &hSubKey) == ERROR_FILE_NOT_FOUND) {
+            if (RegCreateKey(handle->sesskey, session_instance_str, &hSubKey) != ERROR_SUCCESS) {
+                assert(false);
+                return;
+            }
+        }
+        RegSetValueEx(hSubKey, key, 0, REG_SZ, (CONST BYTE*)value,
+            1 + strlen(value));
+        RegCloseKey(hSubKey);
+    }
+}
+
 void write_setting_i(settings_w *handle, const char *key, int value)
 {
     if (handle)
         put_reg_dword(handle->sesskey, key, value);
+}
+
+void write_setting_i_si(settings_w* handle, int session_instance, const char* key, int value)
+{
+    if (handle) {
+        char session_instance_str[5];
+        itoa(session_instance, session_instance_str, 10);
+        HKEY hSubKey;
+        if (RegOpenKey(handle->sesskey, session_instance_str, &hSubKey) == ERROR_FILE_NOT_FOUND) {
+            if (RegCreateKey(handle->sesskey, session_instance_str, &hSubKey) != ERROR_SUCCESS) {
+                assert(false);
+                return;
+            }
+        }
+        if (RegSetValueEx(hSubKey, key, 0, REG_DWORD, (CONST BYTE*) & value, sizeof(value)) != ERROR_SUCCESS) {
+            assert(false);
+        }
+        RegCloseKey(hSubKey);
+    }
 }
 
 void close_settings_w(settings_w *handle)
@@ -103,6 +242,40 @@ char *read_setting_s(settings_r *handle, const char *key)
     return get_reg_sz(handle->sesskey, key);
 }
 
+char* read_setting_s_si(settings_r* handle, int session_instance, const char* key)
+{
+    DWORD type, allocsize, size;
+    char* ret;
+
+    if (!handle)
+        return NULL;
+
+    char session_instance_str[5];
+    itoa(session_instance, session_instance_str, 10);
+    HKEY hSubKey;
+    if (RegOpenKeyEx(handle->sesskey, session_instance_str, 0, KEY_READ, &hSubKey) != ERROR_SUCCESS)
+        return NULL;
+    /* Find out the type and size of the data. */
+    if (RegQueryValueEx(hSubKey, key, 0,
+        &type, NULL, &size) != ERROR_SUCCESS ||
+        type != REG_SZ)
+        return NULL;
+
+    allocsize = size + 1;         /* allow for an extra NUL if needed */
+    ret = snewn(allocsize, char);
+    if (RegQueryValueEx(hSubKey, key, 0,
+        &type, (BYTE*)ret, &size) != ERROR_SUCCESS ||
+        type != REG_SZ) {
+        sfree(ret);
+        return NULL;
+    }
+    RegCloseKey(hSubKey);
+    assert(size < allocsize);
+    ret[size] = '\0'; /* add an extra NUL in case RegQueryValueEx
+                       * didn't supply one */
+    return ret;
+}
+
 int read_setting_i(settings_r *handle, const char *key, int defvalue)
 {
     DWORD val;
@@ -110,6 +283,25 @@ int read_setting_i(settings_r *handle, const char *key, int defvalue)
         return defvalue;
     else
         return val;
+}
+
+int read_setting_i_si(settings_r* handle, int session_instance, const char* key, int defvalue)
+{
+    if (handle) {
+        DWORD type, val, size;
+        size = sizeof(val);
+        char session_instance_str[5];
+        itoa(session_instance, session_instance_str, 10);
+        HKEY hSubKey;
+        if (RegOpenKeyEx(handle->sesskey, session_instance_str, 0, KEY_READ, &hSubKey) != ERROR_SUCCESS
+            || RegQueryValueEx(hSubKey, key, 0, &type, (BYTE*)&val, &size) != ERROR_SUCCESS
+            || size != sizeof(val)
+            || type != REG_DWORD)
+            return defvalue;
+        RegCloseKey(hSubKey);
+        return val;
+    }
+    return defvalue;
 }
 
 FontSpec *read_setting_fontspec(settings_r *handle, const char *name)
@@ -152,6 +344,49 @@ FontSpec *read_setting_fontspec(settings_r *handle, const char *name)
     return ret;
 }
 
+FontSpec* read_setting_fontspec_si(settings_r* handle, int session_instance, const char* name)
+{
+    char* settingname;
+    char* fontname;
+    FontSpec* ret;
+    int isbold, height, charset;
+    const char* font_name_default = "Courier New";
+    const int font_isbold_default = 0;
+    const int font_charset_default = 0;
+    const int font_height_default = 10;
+    size_t font_name_default_len = strlen(font_name_default);
+    fontname = read_setting_s_si(handle, session_instance, name);
+    if (!fontname) {
+        fontname = snewn(font_name_default_len + 1, char);
+        strcpy(fontname, font_name_default);
+        //fontname[font_name_default_len] = 0;
+    }
+
+    settingname = dupcat(name, "IsBold");
+    isbold = read_setting_i_si(handle, session_instance, settingname, -1);
+    sfree(settingname);
+    if (isbold == -1)
+        isbold = font_isbold_default;
+
+    settingname = dupcat(name, "CharSet");
+    charset = read_setting_i_si(handle, session_instance, settingname, -1);
+    sfree(settingname);
+    if (charset == -1) {
+        charset = font_charset_default;
+    }
+
+    settingname = dupcat(name, "Height");
+    height = read_setting_i_si(handle, session_instance, settingname, INT_MIN);
+    sfree(settingname);
+    if (height == INT_MIN) {
+        height = font_height_default;
+    }
+
+    ret = fontspec_new(fontname, isbold, height, charset);
+    sfree(fontname);
+    return ret;
+}
+
 void write_setting_fontspec(settings_w *handle,
                             const char *name, FontSpec *font)
 {
@@ -166,6 +401,23 @@ void write_setting_fontspec(settings_w *handle,
     sfree(settingname);
     settingname = dupcat(name, "Height");
     write_setting_i(handle, settingname, font->height);
+    sfree(settingname);
+}
+
+void write_setting_fontspec_si(settings_w* handle, int session_instance,
+    const char* name, FontSpec* font)
+{
+    char* settingname;
+
+    write_setting_s_si(handle, session_instance, name, font->name);
+    settingname = dupcat(name, "IsBold");
+    write_setting_i_si(handle, session_instance, settingname, font->isbold);
+    sfree(settingname);
+    settingname = dupcat(name, "CharSet");
+    write_setting_i_si(handle, session_instance, settingname, font->charset);
+    sfree(settingname);
+    settingname = dupcat(name, "Height");
+    write_setting_i_si(handle, session_instance, settingname, font->height);
     sfree(settingname);
 }
 
@@ -218,7 +470,7 @@ void del_settings(const char *sessionname)
 
     strbuf *sb = strbuf_new();
     escape_registry_key(sessionname, sb);
-    del_regkey(rkey, sb->s);
+    RegDeleteTree(rkey, sb->s);
     strbuf_free(sb);
 
     close_regkey(rkey);

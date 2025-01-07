@@ -357,6 +357,24 @@ dlgcontrol *ctrl_listbox(struct controlset *s, const char *label,
     return c;
 }
 
+dlgcontrol* ctrl_listview(struct controlset* s, const char* label,
+    char shortcut, HelpCtx helpctx,
+    handler_fn handler, intorptr context)
+{
+    dlgcontrol *c = ctrl_new(s, CTRL_LISTVIEW, helpctx, handler, context);
+    c->label = label ? dupstr(label) : NULL;
+    c->listbox.shortcut = shortcut;
+    c->listbox.height = 9;             /* *shrug* a plausible default */
+    c->listbox.draglist = false;
+    c->listbox.multisel = 0;
+    c->listbox.percentwidth = 100;
+    c->listbox.ncols = 0;
+    c->listbox.percentages = NULL;
+    c->listbox.hscroll = true;
+    return c;
+}
+
+
 dlgcontrol *ctrl_droplist(struct controlset *s, const char *label,
                           char shortcut, int percentage, HelpCtx helpctx,
                           handler_fn handler, intorptr context)
@@ -459,6 +477,7 @@ void ctrl_free(dlgcontrol *ctrl)
         sfree(ctrl->columns.percentages);
         break;
       case CTRL_LISTBOX:
+      case CTRL_LISTVIEW:
         sfree(ctrl->listbox.percentages);
         break;
       case CTRL_FILESELECT:

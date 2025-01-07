@@ -14,6 +14,7 @@
  */
 
 #include "putty.h"
+#include <CommCtrl.h>
 
 struct ShinyDialogBoxState {
     bool ended;
@@ -90,6 +91,15 @@ int ShinyDialogBox(HINSTANCE hinst, LPCTSTR tmpl, const char *winclass,
     MSG msg;
     int gm;
     while ((gm = GetMessage(&msg, NULL, 0, 0)) > 0) {
+        if (msg.message == WM_KEYDOWN && msg.wParam == VK_F2) {
+            char bff[512];
+            GetClassName(GetFocus(), bff, sizeof(bff) - 1);
+            if (!strcmp(bff, "SysListView32")) {
+                HWND hwndCtrl = GetFocus();
+                int iSelect = SendMessage(hwndCtrl, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+                SendMessage(hwndCtrl, LVM_EDITLABEL, (WPARAM)iSelect, (LPARAM)0);
+            }
+        }
         if (!state->ended && !IsDialogMessage(hwnd, &msg))
             DispatchMessage(&msg);
         if (state->ended)
