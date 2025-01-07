@@ -1,0 +1,395 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8BB2110C-4855-33E7-B918-AAE166A98230}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>puttytel</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">puttytel.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">puttytel</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">puttytel.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">puttytel</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">puttytel.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">puttytel</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">puttytel.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">puttytel</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\CMakeFiles;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\terminal;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4244;4267;4018;4146;4293;4090</DisableSpecificWarnings>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE;HAVE_CMAKE_H;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE;HAVE_CMAKE_H;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\CMakeFiles;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\terminal;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /C1252</AdditionalOptions>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\CMakeFiles;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\terminal;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>..\Debug\guiterminal.lib;Debug\guimisc.lib;..\Debug\eventloop.lib;..\Debug\otherbackends.lib;..\Debug\settings.lib;..\Debug\network.lib;..\Debug\utils.lib;advapi32.lib;comdlg32.lib;gdi32.lib;imm32.lib;ole32.lib;shell32.lib;user32.lib;ws2_32.lib;kernel32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64 /manifest:no</AdditionalOptions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/windows/Debug/puttytel.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/Debug/puttytel.pdb</ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\CMakeFiles;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\terminal;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <DisableSpecificWarnings>4244;4267;4018;4146;4293;4090</DisableSpecificWarnings>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE;HAVE_CMAKE_H;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE;HAVE_CMAKE_H;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\CMakeFiles;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\terminal;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /C1252</AdditionalOptions>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\CMakeFiles;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\terminal;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>..\Release\guiterminal.lib;Release\guimisc.lib;..\Release\eventloop.lib;..\Release\otherbackends.lib;..\Release\settings.lib;..\Release\network.lib;..\Release\utils.lib;advapi32.lib;comdlg32.lib;gdi32.lib;imm32.lib;ole32.lib;shell32.lib;user32.lib;ws2_32.lib;kernel32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64 /manifest:no</AdditionalOptions>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/windows/Release/puttytel.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/Release/puttytel.pdb</ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\CMakeFiles;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\terminal;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <DisableSpecificWarnings>4244;4267;4018;4146;4293;4090</DisableSpecificWarnings>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE;HAVE_CMAKE_H;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE;HAVE_CMAKE_H;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\CMakeFiles;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\terminal;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /C1252</AdditionalOptions>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\CMakeFiles;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\terminal;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>..\MinSizeRel\guiterminal.lib;MinSizeRel\guimisc.lib;..\MinSizeRel\eventloop.lib;..\MinSizeRel\otherbackends.lib;..\MinSizeRel\settings.lib;..\MinSizeRel\network.lib;..\MinSizeRel\utils.lib;advapi32.lib;comdlg32.lib;gdi32.lib;imm32.lib;ole32.lib;shell32.lib;user32.lib;ws2_32.lib;kernel32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64 /manifest:no</AdditionalOptions>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/windows/MinSizeRel/puttytel.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/MinSizeRel/puttytel.pdb</ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\CMakeFiles;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\terminal;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4244;4267;4018;4146;4293;4090</DisableSpecificWarnings>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE;HAVE_CMAKE_H;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE;HAVE_CMAKE_H;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\CMakeFiles;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\terminal;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /C1252</AdditionalOptions>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\CMakeFiles;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows;C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\terminal;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>..\RelWithDebInfo\guiterminal.lib;RelWithDebInfo\guimisc.lib;..\RelWithDebInfo\eventloop.lib;..\RelWithDebInfo\otherbackends.lib;..\RelWithDebInfo\settings.lib;..\RelWithDebInfo\network.lib;..\RelWithDebInfo\utils.lib;advapi32.lib;comdlg32.lib;gdi32.lib;imm32.lib;ole32.lib;shell32.lib;user32.lib;ws2_32.lib;kernel32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64 /manifest:no</AdditionalOptions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/windows/RelWithDebInfo/puttytel.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/RelWithDebInfo/puttytel.pdb</ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/windows/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82 -BC:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82 --check-stamp-file C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/windows/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/windows/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82 -BC:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82 --check-stamp-file C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/windows/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/windows/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82 -BC:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82 --check-stamp-file C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/windows/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/windows/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82 -BC:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82 --check-stamp-file C:/Users/yurys/Documents/_shared/0.Resilio/2.projects.ng/jputty/0.82/windows/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows\window.c" />
+    <ClCompile Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows\putty.c" />
+    <ClCompile Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows\help.c" />
+    <ClCompile Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\stubs\no-gss.c" />
+    <ClCompile Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\stubs\no-ca-config.c" />
+    <ClCompile Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\stubs\no-console.c" />
+    <ClCompile Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\stubs\no-rand.c" />
+    <ClCompile Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\proxy\nocproxy.c" />
+    <ClCompile Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\proxy\nosshproxy.c" />
+    <ResourceCompile Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows\puttytel.rc" />
+    <Object Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows\puttytel-be-list.dir\$(Configuration)\be_list.obj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\ZERO_CHECK.vcxproj">
+      <Project>{6AEF50EF-CE4F-3A99-A78C-5607A3932E40}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\eventloop.vcxproj">
+      <Project>{3A0C23AF-6305-31F7-B712-15130B36A769}</Project>
+      <Name>eventloop</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\generated_licence_h.vcxproj">
+      <Project>{5A8FCEB4-7B88-3D22-A5D8-F1FAE972D68F}</Project>
+      <Name>generated_licence_h</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows\guimisc.vcxproj">
+      <Project>{13CF323F-1BAB-34E6-A88D-8D00A7B6035B}</Project>
+      <Name>guimisc</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\guiterminal.vcxproj">
+      <Project>{771CFE98-4422-3702-8A98-7A226F9880A4}</Project>
+      <Name>guiterminal</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\network.vcxproj">
+      <Project>{FCA85AAC-73F4-3034-A73F-13A65D110D25}</Project>
+      <Name>network</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\otherbackends.vcxproj">
+      <Project>{F7C9EDFC-F7D5-342B-97F1-9F9ECE2AFB53}</Project>
+      <Name>otherbackends</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\windows\puttytel-be-list.vcxproj">
+      <Project>{699BB154-1624-3A1F-B48C-C4CA7E3C44AD}</Project>
+      <Name>puttytel-be-list</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\settings.vcxproj">
+      <Project>{6A3540A5-E82C-321C-AD9D-9253B84A6611}</Project>
+      <Name>settings</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\yurys\Documents\_shared\0.Resilio\2.projects.ng\jputty\0.82\utils.vcxproj">
+      <Project>{C312185F-195D-3ADA-8373-1660F949EA05}</Project>
+      <Name>utils</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

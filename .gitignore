@@ -1,6 +1,5 @@
 *.o
 *.pyc
-*.vcxproj
 *.vcxproj.filters
 .ninja_deps
 .ninja_log
@@ -145,5 +144,4 @@ Makefile
 _builds
 .vs
 *.vcxproj.user
-!putty.vcxproj
 !putty.sln
