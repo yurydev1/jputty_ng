@@ -961,8 +961,9 @@ static void sessionsaver_handler(dlgcontrol *ctrl, dlgparam *dlg,
             const int listbox_top_id = dlg_listbox_get_top_index(ssd->listbox, dlg);
             int listbox_bottom_id = listbox_top_id + listbox_height - 2;
             char* errmsg;
-
+            jp_set_selection_session_name(new_session_name);
             bool res = rename_settings(org_session_name, new_session_name, &errmsg);
+            conf_set_str(conf, CONF_wintitle, new_session_name);
             get_sesslist(&ssd->sesslist, true);
             jp_filter_saved_sessions(ctrl, dlg);
             const int new_session_id = jp_get_session_id_via_name(&ssd->sesslist, new_session_name);
