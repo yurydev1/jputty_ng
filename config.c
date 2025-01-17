@@ -1021,6 +1021,7 @@ static void sessionsaver_handler(dlgcontrol *ctrl, dlgparam *dlg,
                 get_sesslist(&ssd->sesslist, true);
                 jp_selection_info* selection_info = jp_get_selection_info();
                 selection_info->session_id = jp_get_filtered_session(--(selection_info->listbox_id));
+                jp_set_selection_session_name(dlg_listbox_get_item_text(ssd->listbox, dlg, selection_info->listbox_id));
                 dlg_refresh(ssd->listbox, dlg);
             }
         } else if (ctrl == ssd->okbutton) {

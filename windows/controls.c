@@ -2493,6 +2493,7 @@ const TCHAR* dlg_listbox_get_selected_item_text(dlgcontrol* ctrl, dlgparam* dp) 
     int selected_id = dlg_listbox_index(ctrl, dp);
     if (selected_id < 0)
         return NULL;
+    return dlg_listbox_get_item_text(ctrl, dp, selected_id);
     struct winctrl* c = dlg_findbyctrl(dp, ctrl);
     LV_ITEM lvi;
     memset(&lvi, 0, sizeof(lvi));

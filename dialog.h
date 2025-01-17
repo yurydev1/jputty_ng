@@ -600,6 +600,7 @@ int dlg_listbox_getid(dlgcontrol *ctrl, dlgparam *dp, int index);
 /* dlg_listbox_index returns <0 if no single element is selected. */
 int dlg_listbox_index(dlgcontrol *ctrl, dlgparam *dp);
 const TCHAR* dlg_listbox_get_selected_item_text(union control* ctrl, dlgparam* dp);
+const TCHAR* dlg_listbox_get_item_text(dlgcontrol* ctrl, dlgparam* dp, int index);
 bool dlg_listbox_issel(dlgcontrol *ctrl, dlgparam *dp, int index);
 void dlg_listbox_select(dlgcontrol *ctrl, dlgparam *dp, int index);
 void dlg_text_set(dlgcontrol *ctrl, dlgparam *dp, char const *text);
