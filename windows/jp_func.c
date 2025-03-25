@@ -144,6 +144,7 @@ void jp_load_instance_parameters(Conf* conf) {
         //char* buffer = NULL;
         //buffer = read_setting_s(sesskey, "WinTitle");
         //conf_set_str(conf, CONF_wintitle, buffer);
+        jp_get_selection_info()->loading_settings = true;
         conf_set_int(conf, CONF_width, read_setting_i_si(sesskey, selection_info->instance_id, "TermWidth", 80));
         conf_set_int(conf, CONF_height, read_setting_i_si(sesskey, selection_info->instance_id, "TermHeight", 24));
         conf_set_int(conf, CONF_windowpos_top, read_setting_i_si(sesskey, selection_info->instance_id, "SaveWindowTop", CW_USEDEFAULT));
@@ -154,6 +155,7 @@ void jp_load_instance_parameters(Conf* conf) {
         close_settings_r(sesskey);
         sfree(buffer); buffer = NULL;
         fontspec_free(font); font = NULL;
+        jp_get_selection_info()->loading_settings = false;
     }
 }
 
